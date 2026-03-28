@@ -1,76 +1,53 @@
-# array.h
+# ccc_array.h
 ## Description
-This header-only library implements a universal interface for *dynamic* and *static* arrays.
+Claudio's C Collections Array, a header-only library that implements a universal interface for *dynamic* and *static* arrays.
 
 ## How to use it
-Since it's a header-only library, all you need to do is use `#include "array.h"` in your project files.
-Only remember to define `ARRAY_IMPLEMENTATION`, in exactly ***one*** translation unit (e.g., main.c) before the inclusion:
+Since it's a header-only library, all you need to do is use `#include "ccc_array.h"` in your project files.
+Only remember to define `CCC_ARRAY_IMPLEMENTATION`, in exactly ***one*** translation unit (e.g., main.c) before the inclusion:
 ```c
-#define ARRAY_IMPLEMENTATION
-#include "array.h"
+#define CCC_ARRAY_IMPLEMENTATION
+#include "ccc_array.h"
 ```
+Optionally, you can define `CCC_ARRAY_NO_NAMESPACE` to avoid the `ccc_` prefix in the API.
 
 ### Header and container
-The library uses a header (the "array" type, including all the array metadata) and a container (the actual data).
-Header and container can be provided by the user (static implementation) or created by the library (dynamic implementation).
-There are four possible array combinations:
+The library uses a header (the `ccc_array` type, including all the array metadata) and a container (the actual data).
+Header and container can be provided by the user using the arguments `header` and `container` or created by the library.
 
+### Array creation
 1. dynamic array (header and container created by the library)
 ```c
-// array* array_create_dynamic(size_t slot_size, size_t initial_container_size)
-array* a = array_create_dynamic(sizeof(int), 10);
+// assuming CCC_ARRAY_NO_NAMESPACE is defined
+array* a = array_create(sizeof(int));
 array_destroy(a);
 ```
 
-3. semi-dynamic array (header provided by the user and container created by the library) **[MOST COMMON]**
+2. static array (header and container provided by the user)
 ```c
-// array* array_create_semi_dynamic(array* a, size_t slot_size, size_t initial_container_size)
+// assuming CCC_ARRAY_NO_NAMESPACE is defined
 array header;
-array* a = array_create_semi_dynamic(&header, sizeof(int), 10);
-// or array* a = array_create_semi_dynamic(&(array){0}, sizeof(int), 10);
-array_destroy(a);
-```
-
-4. semi-static array (header created by the library and container provided by the user)
-```c
-// array* array_create_semi_static(void* static_container, size_t slot_size, size_t container_size)
 int container[10];
-array* a = array_create_semi_static(&container, sizeof(int), 10);
-// or array* a = array_create_semi_static(&(int[10]){0}, sizeof(int), 10);
-array_destroy(a);
-```
-
-5. static array (header and container provided by the user)
-```c
-// array* array_create_static(array* a, void* static_container, size_t slot_size, size_t container_size)
-array header;
-int container[int];
-array* a = array_create_static(&header, &container, sizeof(int), 10);
-// or array* a = array_create_semi_static(&(array){0}, &(int[10]){0}, sizeof(int), 10);
+array* a = array_create(sizeof(int), .header = &header, .container = &container, .elements_capacity = 10);
+// or array* a = array_create(sizeof(int), .header = &(array){0}, .container = &(int[10]){0}, .elements_capacity = 10);
 array_destroy(a);  // optional
 ```
 
 ## API
 ```c
-array* array_create(array_dynamicity_e dynamicity, size_t slot_size, size_t container_size, array* a, void* static_container)
-array* array_create_dynamic(size_t slot_size, size_t initial_container_size)
-array* array_create_semi_dynamic(array* a, size_t slot_size, size_t initial_container_size)
-array* array_create_semi_static(void* static_container, size_t slot_size, size_t container_size)
-array* array_create_static(array* a, void* static_container, size_t slot_size, size_t container_size)
-void array_destroy(array* a)
-void* array_at(array* a, size_t index)
-void* array_insert_slot(array* a, size_t index)
-void* array_insert_copy(array* a, void* value, size_t index)
-void array_remove(array* a, size_t index)
-void array_clear(array* a)
-void* array_append_copy(array* a, void* value)
-void* array_append_slot(array* a)
-void array_pop(array* a)
-void* array_front(array* a)
-void* array_back(array* a)
-size_t array_size(array* a)
-char array_empty(array* a)
-void array_sort(array* a, int (*compare_func)(const void*, const void*))
-void* array_find(array* a, const void* value, int (*compare_func)(const void*, const void*))
-char array_binary_search(array* a, const void* value, int (*compare_func)(const void*, const void*), size_t* pos)
+ccc_array* ccc_array_create(size_t element_size, ccc_array* header = NULL, void* container = NULL, \
+    size_t elements_capacity = 4, ccc_array_allocator allocator = CCC_ARRAY_STDLIB_ALLOCATOR, bool zeroed = false, bool no_realloc = false);
+void ccc_array_destroy(ccc_array* this)
+void* ccc_array_at(ccc_array* this, size_t index)
+void* ccc_array_insert(ccc_array* this, size_t index)
+void ccc_array_remove(ccc_array* this, size_t index)
+void ccc_array_clear(ccc_array* this)
+void* ccc_array_append(ccc_array* this)
+void ccc_array_pop(ccc_array* this)
+void* ccc_array_front(ccc_array* this)
+void* ccc_array_back(ccc_array* this)
+size_t ccc_array_size(ccc_array* this)
+bool ccc_array_empty(ccc_array* this)
+void ccc_array_sort(ccc_array* this, int (*compare_func)(const void*, const void*))
+size_t ccc_array_find(ccc_array* this, const void* value, int (*compare_func)(const void*, const void*))
 ```

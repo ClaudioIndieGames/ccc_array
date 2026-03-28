@@ -1,10 +1,16 @@
-all: example
+all: build/example
 
-example: example.o
-	gcc -o example example.o
+run: build/example
+	./build/example
 
-example.o: example.c array.h
-	gcc -O0 -Wall -ggdb -c example.c
+build/example: build/example.o
+	gcc -o build/example build/example.o
+
+build/example.o: example.c ccc_array.h
+	mkdir -p build
+	gcc -O0 -Wall -Wextra -ggdb -c example.c -o build/example.o
 
 clean:
-	rm -rf example example.exe example.o
+	rm -rf build
+
+PHONY: all run clean
