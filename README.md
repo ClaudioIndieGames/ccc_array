@@ -36,7 +36,7 @@ array_destroy(a);  // optional
 ## API
 ```c
 ccc_array* ccc_array_create(size_t element_size, ccc_array* header = NULL, void* container = NULL, \
-    size_t elements_capacity = 4, ccc_array_allocator allocator = CCC_ARRAY_STDLIB_ALLOCATOR, bool zeroed = false, bool no_realloc = false);
+    size_t elements_capacity = 4, ccc_array_allocator allocator = CCC_ARRAY_DEFAULT_ALLOCATOR, bool zeroed = false, bool no_realloc = false);
 void ccc_array_destroy(ccc_array* this)
 void* ccc_array_at(ccc_array* this, size_t index)
 void* ccc_array_insert(ccc_array* this, size_t index)

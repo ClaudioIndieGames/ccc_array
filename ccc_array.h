@@ -37,7 +37,7 @@
     ## API
     ```c
     ccc_array* ccc_array_create(size_t element_size, ccc_array* header = NULL, void* container = NULL, \
-        size_t elements_capacity = 4, ccc_array_allocator allocator = CCC_ARRAY_STDLIB_ALLOCATOR, bool zeroed = false, bool no_realloc = false);
+        size_t elements_capacity = 4, ccc_array_allocator allocator = CCC_ARRAY_DEFAULT_ALLOCATOR, bool zeroed = false, bool no_realloc = false);
     void ccc_array_destroy(ccc_array* this)
     void* ccc_array_at(ccc_array* this, size_t index)
     void* ccc_array_insert(ccc_array* this, size_t index)
@@ -62,6 +62,15 @@
 #include <stddef.h>         // size_t
 #include <stdbool.h>        // bool
 
+#ifndef CCC_ARRAY_NO_STDLIB
+#include <stdlib.h>         // malloc, realloc, free
+#define CCC_ARRAY_DEFAULT_ALLOCATOR ((ccc_array_allocator) {malloc, realloc, free})
+#else
+#ifndef CCC_ARRAY_DEFAULT_ALLOCATOR
+#error "You must define CCC_ARRAY_DEFAULT_ALLOCATOR if you don't want to include stdlib.h"
+#endif
+#endif
+
 #ifdef CCC_ARRAY_NO_NAMESPACE
 #define array_allocator     ccc_array_allocator
 #define array               ccc_array
@@ -80,8 +89,6 @@
 #define array_sort          ccc_array_sort
 #define array_find          ccc_array_find
 #endif
-
-#define CCC_ARRAY_STDLIB_ALLOCATOR ((ccc_array_allocator) {malloc, realloc, free})
 
 typedef struct {
     void* (*alloc)(size_t size);
@@ -118,7 +125,7 @@ typedef struct {
     .header = NULL, \
     .container = NULL, \
     .elements_capacity = 4, \
-    .allocator = CCC_ARRAY_STDLIB_ALLOCATOR, \
+    .allocator = CCC_ARRAY_DEFAULT_ALLOCATOR, \
     .zeroed = false, \
     .no_realloc = false, \
     __VA_ARGS__ \
@@ -140,10 +147,6 @@ void ccc_array_sort(ccc_array* this, int (*compare_func)(const void*, const void
 size_t ccc_array_find(ccc_array* this, const void* value, int (*compare_func)(const void*, const void*));
 
 #ifdef CCC_ARRAY_IMPLEMENTATION
-
-#ifndef CCC_ARRAY_NO_STDLIB
-#include <stdlib.h>
-#endif
 
 ccc_array* ccc_array_create_(size_t element_size, ccc_array_create_opt_args opt_args) {
     if (element_size <= 0) return NULL;
