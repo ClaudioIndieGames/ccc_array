@@ -37,7 +37,7 @@
     ## API
     ```c
     ccc_array* ccc_array_create(size_t element_size, ccc_array* header = NULL, void* container = NULL, \
-        size_t elements_capacity = 4, ccc_array_allocator allocator = CCC_ARRAY_DEFAULT_ALLOCATOR, bool zeroed = false, bool no_realloc = false);
+        size_t elements_capacity = 4, ccc_allocator* allocator = &ccc_array_default_allocator, bool zeroed = false, bool no_realloc = false);
     void ccc_array_destroy(ccc_array* this)
     void* ccc_array_at(ccc_array* this, size_t index)
     void* ccc_array_insert(ccc_array* this, size_t index)
@@ -62,39 +62,41 @@
 #include <stddef.h>         // size_t
 #include <stdbool.h>        // bool
 
-#ifndef CCC_ARRAY_NO_STDLIB
-#include <stdlib.h>         // malloc, realloc, free
-#define CCC_ARRAY_DEFAULT_ALLOCATOR ((ccc_array_allocator) {malloc, realloc, free})
-#else
-#ifndef CCC_ARRAY_DEFAULT_ALLOCATOR
-#error "You must define CCC_ARRAY_DEFAULT_ALLOCATOR if you don't want to include stdlib.h"
-#endif
-#endif
-
-#ifdef CCC_ARRAY_NO_NAMESPACE
-#define array_allocator     ccc_array_allocator
-#define array               ccc_array
-#define array_create        ccc_array_create
-#define array_destroy       ccc_array_destroy
-#define array_at            ccc_array_at
-#define array_insert        ccc_array_insert
-#define array_remove        ccc_array_remove
-#define array_clear         ccc_array_clear
-#define array_append        ccc_array_append
-#define array_pop           ccc_array_pop
-#define array_front         ccc_array_front
-#define array_back          ccc_array_back
-#define array_size          ccc_array_size
-#define array_empty         ccc_array_empty
-#define array_sort          ccc_array_sort
-#define array_find          ccc_array_find
+#ifdef CCC_ALLOCATOR_NO_NAMESPACE
+#define allocator                   ccc_allocator
 #endif
 
 typedef struct {
     void* (*alloc)(size_t size);
     void* (*realloc)(void* ptr, size_t new_size);
     void (*free)(void* ptr);
-} ccc_array_allocator;
+} ccc_allocator;
+
+#ifdef CCC_ARRAY_NO_NAMESPACE
+#define array_default_allocator     ccc_array_default_allocator
+#define array                       ccc_array
+#define array                       ccc_array
+#define array_create                ccc_array_create
+#define array_destroy               ccc_array_destroy
+#define array_at                    ccc_array_at
+#define array_insert                ccc_array_insert
+#define array_remove                ccc_array_remove
+#define array_clear                 ccc_array_clear
+#define array_append                ccc_array_append
+#define array_pop                   ccc_array_pop
+#define array_front                 ccc_array_front
+#define array_back                  ccc_array_back
+#define array_size                  ccc_array_size
+#define array_empty                 ccc_array_empty
+#define array_sort                  ccc_array_sort
+#define array_find                  ccc_array_find
+#endif
+
+extern ccc_allocator ccc_array_default_allocator;
+
+#ifndef CCC_ARRAY_DEF
+#define CCC_ARRAY_DEF
+#endif
 
 enum ccc_array_attributes_e {
     CCC_ARRAY_ZEROED = 1 << 0,
@@ -108,7 +110,7 @@ typedef struct {
     size_t element_size;
     size_t count;
     size_t capacity;
-    ccc_array_allocator allocator;
+    ccc_allocator* allocator;
     unsigned int attributes;
 } ccc_array;
 
@@ -116,7 +118,7 @@ typedef struct {
     ccc_array* header;
     void* container;
     size_t elements_capacity;
-    ccc_array_allocator allocator;
+    ccc_allocator* allocator;
     bool zeroed;
     bool no_realloc;
 } ccc_array_create_opt_args;
@@ -125,45 +127,51 @@ typedef struct {
     .header = NULL, \
     .container = NULL, \
     .elements_capacity = 4, \
-    .allocator = CCC_ARRAY_DEFAULT_ALLOCATOR, \
+    .allocator = &ccc_array_default_allocator, \
     .zeroed = false, \
     .no_realloc = false, \
     __VA_ARGS__ \
 })
-ccc_array* ccc_array_create_(size_t element_size, ccc_array_create_opt_args opt_args);
+CCC_ARRAY_DEF ccc_array* ccc_array_create_(size_t element_size, ccc_array_create_opt_args opt_args);
 
-void ccc_array_destroy(ccc_array* this);
-void* ccc_array_at(ccc_array* this, size_t index);
-void* ccc_array_insert(ccc_array* this, size_t index);
-void ccc_array_remove(ccc_array* this, size_t index);
-void ccc_array_clear(ccc_array* this);
-void* ccc_array_append(ccc_array* this);
-void ccc_array_pop(ccc_array* this);
-void* ccc_array_front(ccc_array* this);
-void* ccc_array_back(ccc_array* this);
-size_t ccc_array_size(ccc_array* this);
-bool ccc_array_empty(ccc_array* this);
-void ccc_array_sort(ccc_array* this, int (*compare_func)(const void*, const void*));
-size_t ccc_array_find(ccc_array* this, const void* value, int (*compare_func)(const void*, const void*));
+CCC_ARRAY_DEF void ccc_array_destroy(ccc_array* this);
+CCC_ARRAY_DEF void* ccc_array_at(ccc_array* this, size_t index);
+CCC_ARRAY_DEF void* ccc_array_insert(ccc_array* this, size_t index);
+CCC_ARRAY_DEF void ccc_array_remove(ccc_array* this, size_t index);
+CCC_ARRAY_DEF void ccc_array_clear(ccc_array* this);
+CCC_ARRAY_DEF void* ccc_array_append(ccc_array* this);
+CCC_ARRAY_DEF void ccc_array_pop(ccc_array* this);
+CCC_ARRAY_DEF void* ccc_array_front(ccc_array* this);
+CCC_ARRAY_DEF void* ccc_array_back(ccc_array* this);
+CCC_ARRAY_DEF size_t ccc_array_size(ccc_array* this);
+CCC_ARRAY_DEF bool ccc_array_empty(ccc_array* this);
+CCC_ARRAY_DEF void ccc_array_sort(ccc_array* this, int (*compare_func)(const void*, const void*));
+CCC_ARRAY_DEF size_t ccc_array_find(ccc_array* this, const void* value, int (*compare_func)(const void*, const void*));
 
 #ifdef CCC_ARRAY_IMPLEMENTATION
 
-ccc_array* ccc_array_create_(size_t element_size, ccc_array_create_opt_args opt_args) {
+#ifndef CCC_ARRAY_NO_STDLIB
+#include <stdlib.h>         // malloc, realloc, free
+ccc_allocator ccc_array_default_allocator = {malloc, realloc, free};
+#endif
+
+CCC_ARRAY_DEF ccc_array* ccc_array_create_(size_t element_size, ccc_array_create_opt_args opt_args) {
     if (element_size <= 0) return NULL;
 
     // check the allocator
+    if (!opt_args.allocator) return NULL;
     if (!opt_args.header) {
-        if (opt_args.allocator.alloc == NULL || opt_args.allocator.free == NULL) return NULL;
+        if (opt_args.allocator->alloc == NULL || opt_args.allocator->free == NULL) return NULL;
     }
     if (!opt_args.container) {
-        if (opt_args.allocator.alloc == NULL || opt_args.allocator.free == NULL) return NULL;
-        if (!opt_args.no_realloc && opt_args.allocator.realloc == NULL) return NULL;
+        if (opt_args.allocator->alloc == NULL || opt_args.allocator->free == NULL) return NULL;
+        if (!opt_args.no_realloc && opt_args.allocator->realloc == NULL) return NULL;
     }
 
     // create the array header
     ccc_array* header = opt_args.header;
     if (!header) {
-        header = opt_args.allocator.alloc(sizeof(ccc_array));
+        header = opt_args.allocator->alloc(sizeof(ccc_array));
         if (!header) return NULL;
     }
 
@@ -171,7 +179,7 @@ ccc_array* ccc_array_create_(size_t element_size, ccc_array_create_opt_args opt_
     if (opt_args.elements_capacity <= 0) return NULL;
     header->container = opt_args.container;
     if (!header->container) {
-        header->container = opt_args.allocator.alloc(element_size * opt_args.elements_capacity);
+        header->container = opt_args.allocator->alloc(element_size * opt_args.elements_capacity);
         if (!header->container) return NULL;
     }
 
@@ -194,24 +202,24 @@ ccc_array* ccc_array_create_(size_t element_size, ccc_array_create_opt_args opt_
     return header;
 }
 
-void ccc_array_destroy(ccc_array* this) {
+CCC_ARRAY_DEF void ccc_array_destroy(ccc_array* this) {
     if (!this) return;
 
     if (!(this->attributes & CCC_ARRAY_EXT_CONTAINER)) {
-        this->allocator.free(this->container);
+        this->allocator->free(this->container);
     }
     if (!(this->attributes & CCC_ARRAY_EXT_HEADER)) {
-        this->allocator.free(this);
+        this->allocator->free(this);
     }
 }
 
-void* ccc_array_at(ccc_array* this, size_t index) {
+CCC_ARRAY_DEF void* ccc_array_at(ccc_array* this, size_t index) {
     if (!this) return NULL;
     if (index >= this->count) return NULL;
     return (char*)(this->container) + (this->element_size * index);
 }
 
-void* ccc_array_insert(ccc_array* this, size_t index) {
+CCC_ARRAY_DEF void* ccc_array_insert(ccc_array* this, size_t index) {
     if (!this) return NULL;
     if (index > this->count) return NULL;
 
@@ -219,7 +227,7 @@ void* ccc_array_insert(ccc_array* this, size_t index) {
     if (this->count * this->element_size >= this->capacity) {
         if (this->attributes & CCC_ARRAY_NO_REALLOC) return NULL;
         this->capacity *= 2;
-        this->container = this->allocator.realloc(this->container, this->capacity);
+        this->container = this->allocator->realloc(this->container, this->capacity);
         if (!this->container) return NULL;
         if (this->attributes & CCC_ARRAY_ZEROED) {
             for (size_t i = this->count * this->element_size; i < this->capacity; ++i) {
@@ -247,7 +255,7 @@ void* ccc_array_insert(ccc_array* this, size_t index) {
     return ccc_array_at(this, index);
 }
 
-void ccc_array_remove(ccc_array* this, size_t index) {
+CCC_ARRAY_DEF void ccc_array_remove(ccc_array* this, size_t index) {
     if (!this) return;
     if (index >= this->count) return;
 
@@ -256,7 +264,7 @@ void ccc_array_remove(ccc_array* this, size_t index) {
     if (this->count > 4 && this->count * this->element_size <= this->capacity / 4) {
         if (!(this->attributes & CCC_ARRAY_NO_REALLOC)) {
             this->capacity = this->count * this->element_size * 2;
-            this->container = this->allocator.realloc(this->container, this->capacity);
+            this->container = this->allocator->realloc(this->container, this->capacity);
             if (!this->container) return;
         }
     }
@@ -274,7 +282,7 @@ void ccc_array_remove(ccc_array* this, size_t index) {
     }
 }
 
-void ccc_array_clear(ccc_array* this) {
+CCC_ARRAY_DEF void ccc_array_clear(ccc_array* this) {
     if (!this) return;
     if (this->attributes & CCC_ARRAY_ZEROED) {
         for (size_t i = 0; i < this->count * this->element_size; ++i) {
@@ -284,32 +292,35 @@ void ccc_array_clear(ccc_array* this) {
     this->count = 0;
 }
 
-void* ccc_array_append(ccc_array* this) {
+CCC_ARRAY_DEF void* ccc_array_append(ccc_array* this) {
     return ccc_array_insert(this, this->count);
 }
 
-void ccc_array_pop(ccc_array* this) {
+CCC_ARRAY_DEF void ccc_array_pop(ccc_array* this) {
     ccc_array_remove(this, 0);
 }
 
-void* ccc_array_front(ccc_array* this) {
+CCC_ARRAY_DEF void* ccc_array_front(ccc_array* this) {
     return ccc_array_at(this, 0);
 }
 
-void* ccc_array_back(ccc_array* this) {
+CCC_ARRAY_DEF void* ccc_array_back(ccc_array* this) {
     return ccc_array_at(this, this->count - 1);
 }
 
-size_t ccc_array_size(ccc_array* this) {
+CCC_ARRAY_DEF size_t ccc_array_size(ccc_array* this) {
     if (!this) return 0;
     return this->count;
 }
 
-bool ccc_array_empty(ccc_array* this) {
+CCC_ARRAY_DEF bool ccc_array_empty(ccc_array* this) {
     return (ccc_array_size(this) == 0);
 }
 
-void ccc_array_sort(ccc_array* this, int (*compare_func)(const void*, const void*)) {
+CCC_ARRAY_DEF void ccc_array_sort(ccc_array* this, int (*compare_func)(const void*, const void*)) {
+    if (!this) return;
+    if (this->count <= 1) return;
+    if (!compare_func) return;
 
     // Small manual stack (log2(n) is enough if optimized)
     int stack[64];
@@ -398,7 +409,10 @@ void ccc_array_sort(ccc_array* this, int (*compare_func)(const void*, const void
     }
 }
 
-size_t ccc_array_find(ccc_array* this, const void* value, int (*compare_func)(const void*, const void*)) {
+CCC_ARRAY_DEF size_t ccc_array_find(ccc_array* this, const void* value, int (*compare_func)(const void*, const void*)) {
+    if (!this) return 0;
+    if (!compare_func) return this->count;
+
     size_t index = 0;
     while (index < this->count) {
         void* e = ccc_array_at(this, index);
