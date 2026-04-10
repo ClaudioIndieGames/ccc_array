@@ -33,21 +33,25 @@ array* a = array_create(sizeof(int), .header = &header, .container = &container,
 array_destroy(a);  // optional
 ```
 
+### CUDA Support
+When compiling with CUDA (nvcc), the library uses CUDA allocators for device memory.
+
+
 ## API
 ```c
 ccc_array* ccc_array_create(size_t element_size, ccc_array* header = NULL, void* container = NULL, \
     size_t elements_capacity = 4, ccc_allocator* allocator = &ccc_array_default_allocator, bool zeroed = false, bool no_realloc = false);
-void ccc_array_destroy(ccc_array* this)
-void* ccc_array_at(ccc_array* this, size_t index)
-void* ccc_array_insert(ccc_array* this, size_t index)
-void ccc_array_remove(ccc_array* this, size_t index)
-void ccc_array_clear(ccc_array* this)
-void* ccc_array_append(ccc_array* this)
-void ccc_array_pop(ccc_array* this)
-void* ccc_array_front(ccc_array* this)
-void* ccc_array_back(ccc_array* this)
-size_t ccc_array_size(ccc_array* this)
-bool ccc_array_empty(ccc_array* this)
-void ccc_array_sort(ccc_array* this, int (*compare_func)(const void*, const void*))
-size_t ccc_array_find(ccc_array* this, const void* value, int (*compare_func)(const void*, const void*))
+void ccc_array_destroy(ccc_array* self)
+void* ccc_array_at(ccc_array* self, size_t index)
+void* ccc_array_insert(ccc_array* self, size_t index)
+void ccc_array_remove(ccc_array* self, size_t index)
+void ccc_array_clear(ccc_array* self)
+void* ccc_array_append(ccc_array* self)
+void ccc_array_pop(ccc_array* self)
+void* ccc_array_front(ccc_array* self)
+void* ccc_array_back(ccc_array* self)
+size_t ccc_array_size(ccc_array* self)
+bool ccc_array_empty(ccc_array* self)
+void ccc_array_sort(ccc_array* self, int (*compare_func)(const void*, const void*))
+size_t ccc_array_find(ccc_array* self, const void* value, int (*compare_func)(const void*, const void*))
 ```

@@ -13,7 +13,7 @@ int compare_ints_rev(const void* a, const void* b) {
 
 void print_ints(ccc_array* a) {
     for (size_t i = 0; i < array_size(a); ++i) {
-        int* element = array_at(a, i);
+        int* element = (int*)array_at(a, i);
         printf("%d ", *element);
     }
     printf("\n");
@@ -22,13 +22,25 @@ void print_ints(ccc_array* a) {
 int main() {
 
     // dynamic array example
+#ifdef __cplusplus
+    array_create_opt_args opt_args = {
+        .header = NULL,
+        .container = NULL,
+        .elements_capacity = 10,
+        .allocator = &ccc_array_default_allocator,
+        .zeroed = false,
+        .no_realloc = false
+    };
+    array* da = array_create_with_args(sizeof(int), opt_args);
+#else
     array* da = array_create(sizeof(int), .elements_capacity = 10);
+#endif
     if (!da) {
         fprintf(stderr, "Failed to create array\n");
         return 1;
     }
     for (int i = 0; i < 15; ++i) {
-        int* element = array_append(da);
+        int* element = (int*)array_append(da);
         if (!element) {
             fprintf(stderr, "Failed to append to array\n");
             array_destroy(da);
@@ -49,13 +61,27 @@ int main() {
     array_destroy(da);
 
     // static array example
+#ifdef __cplusplus
+    array header = {0};
+    int container[10] = {0};
+    opt_args = (array_create_opt_args) {
+        .header = &header,
+        .container = &container,
+        .elements_capacity = 10,
+        .allocator = &ccc_array_default_allocator,
+        .zeroed = false,
+        .no_realloc = false
+    };
+    array* sa = array_create_with_args(sizeof(int), opt_args);
+#else
     array* sa = array_create(sizeof(int), .header = &(array){0}, .container = &(int [10]){0}, .elements_capacity = 10);
+#endif    
     if (!sa) {
         fprintf(stderr, "Failed to create static array\n");
         return 1;
     }
     for (int i = 0; i < 10; ++i) {
-        int* element = array_insert(sa, 0);
+        int* element = (int*)array_insert(sa, 0);
         if (!element) {
             fprintf(stderr, "Failed to insert into static array\n");
             array_destroy(sa);
